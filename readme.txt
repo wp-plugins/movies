@@ -13,7 +13,7 @@ Movies allows you to use simple functions in your theme to display videos you ha
 
 You can use this shortcode <code>[movies]</code> or <code>the_movies()</code> or <code>the_videos()</code> in your theme to output your item's attachments.
 
-Read More here: http://scottctaylor.wordpress.com/2010/11/22/new-plugin-audio/
+Read More here: http://scottctaylor.wordpress.com/2010/11/24/new-plugin-movies/
 
 = 0.1 =
 * Initial release
