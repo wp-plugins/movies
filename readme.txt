@@ -1,0 +1,21 @@
+=== Movies ===
+Contributors: wonderboymusic
+Tags: media, attachments, admin, video, videos, cms, jquery, manage, music, upload, VideoJS, HTML5
+Requires at least: 3.0
+Tested up to: 3.0
+Stable Tag: 0.1
+
+HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia Micro-formats, attach images to videos (when used with Shuffle), associated Ogg Theora videos with MP4s/H.264 (When used with Shuffle) 
+
+== Description ==
+
+Movies allows you to use simple functions in your theme to display videos you have attached to Posts/Pages/Custom Post Types in your Media Library. Your player is styled 100% with CSS/images (if you want). The video player uses the VideoJS library and your browser's native HTML5 capabilities when available with a fallback to Flash when necessary. Allows you to play video inline on mobile browsers that support HTML5 Video. Video metadata is written to the page using the hMedia micro-format for semantic markup.
+
+You can use this shortcode <code>[movies]</code> or <code>the_movies()</code> or <code>the_videos()</code> in your theme to output your item's attachments.
+
+Read More here: http://scottctaylor.wordpress.com/2010/11/22/new-plugin-audio/
+
+= 0.1 =
+* Initial release
+
+== Upgrade Notice ==
