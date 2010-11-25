@@ -3,7 +3,7 @@ Contributors: wonderboymusic
 Tags: media, attachments, admin, video, videos, cms, jquery, manage, music, upload, VideoJS, HTML5
 Requires at least: 3.0
 Tested up to: 3.0
-Stable Tag: 0.1
+Stable Tag: 0.2
 
 HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia Micro-formats, attach images to videos (when used with Shuffle), associated Ogg Theora videos with MP4s/H.264 (When used with Shuffle) 
 
@@ -25,3 +25,5 @@ Read More here: http://scottctaylor.wordpress.com/2010/11/24/new-plugin-movies/
 2. You can customize the look of your player and playlist by adding a video.css file in your theme's directory
 
 == Upgrade Notice ==
+
+* Update to get the latest bug fixes from ongoing development. 0.2 fixes bugs related to dynamic rendering of Video in Firfox.
