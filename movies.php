@@ -11,22 +11,33 @@ if (!class_exists('getID3')) {
 	require_once('getid3/getid3/getid3.php');
 }
 
-define('SECURE', true);
+define('SECURE', false);
 
-function video_get_ogg($id) {
+function video_get_ogg_object($id) {
 	$ogg = '';
 	if (function_exists('shuffle_by_mime_type')):
 		$oggs =& get_video($id);
 		if (is_array($oggs) && count($oggs) > 0) {
 			foreach ($oggs as $o):
 				if ($o->post_mime_type === 'video/ogg') {
-					$ogg = $o->guid;
+					$ogg = $o;
 					break;				
 				}
 			endforeach;
 		}
 		unset($oggs);
 	endif;
+	return $ogg;
+}
+
+function video_get_ogg($id) {
+	$ogg = '';
+	
+	$obj =& video_get_ogg_object($id);
+	if (!empty($obj)) {
+		$ogg = $obj->guid;
+	}
+	
 	return $ogg;
 }
 
@@ -80,14 +91,22 @@ function video_get_src($url) {
 	return $url;
 }
 
+function video_enclosure(&$post, &$info) {
+	$mime = $post->post_mime_type;
+	$source = $post->guid;
+	$title = apply_filters('the_title', $post->post_title);
+	$attr = apply_filters('the_title_attribute', $post->post_title);	
+?>
+		<a rel="enclosure" type="<?= $mime ?>" title="Permalink for <?= $attr ?>" href="<?= video_get_src($source) ?>"><?= $title ?> (<span class="width"><?= $info['width'] ?></span> x <span class="height"><?= $info['height'] ?></span>)</a>
+<?php
+}
+
 function video_formatted_item(&$post, &$info) {
 	$title = apply_filters('the_title', $post->post_title);
 	$attr = apply_filters('the_title_attribute', $post->post_title);
 	$artist =  $post->post_excerpt;
-	$description = $post->post_content;
-	$source = $post->guid;
-	$mime = $post->post_mime_type;
 	$img = video_get_poster($post->ID);
+	$description = $post->post_content;
 ?>
 	<div class="hMedia">
 		<?php if (!empty($img)): ?><img class="photo" src="<?= $img ?>" alt="<?= $attr ?>"/>
@@ -96,8 +115,12 @@ function video_formatted_item(&$post, &$info) {
 			<span class="vcard">
 				<span class="fn org"><?= $artist ?></span>
 			</span>
-		</span>	    
-		<a rel="enclosure" type="<?= $mime ?>" title="Permalink for <?= $attr ?>" href="<?= video_get_src($source) ?>"><?= $title ?> (<span class="width"><?= $info['width'] ?></span> x <span class="height"><?= $info['height'] ?></span>)</a>	
+		</span>	   
+		<?php 
+		video_enclosure($post, $info);
+		$ogg = video_get_ogg_object($post->ID);
+		if (!empty($ogg)): video_enclosure($ogg, $info); endif;
+		?> 	
 		<p><?= $description ?></p>    	    
 	</div>
 <?php
