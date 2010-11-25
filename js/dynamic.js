@@ -3,7 +3,7 @@
 /*globals $, jQuery, window, document */
 
 (function ($) {
-	var videos, canvas;
+	var videos;
 
 	function writeVideo(ctx) {
 		var markup,
@@ -16,7 +16,7 @@
 			video = Base64.decode(video);
 		}
 
-		markup = ['<video id="video-playlist" class="video-js player" width="', W, '" height="', H, '" preload ', img ? 'poster="' + img + '"' : '', ' controls>',
+		markup = ['<video class="video-js player" width="', W, '" height="', H, '" preload ', img ? 'poster="' + img + '"' : '', ' controls>',
 		  	'<source type=\'video/mp4; codecs="avc1.42E01E, mp4a.40.2"\' src="', video, '">',
 		  	'<source type=\'video/ogg; codecs="theora, vorbis"\' src="', video, '">',
 		  	'<object class="vjs-flash-fallback" width="', W, '" height="', H, '" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">',
@@ -27,7 +27,7 @@
 		'</object>',
 		'</video>'].join('');
 
-		canvas.html(markup);
+		ctx.closest('.videos-wrapper').find('.video-js-box').html(markup);
 	}
 
 	function selectVideo() {
@@ -39,7 +39,6 @@
 	}
 
 	$(document).ready(function () {
-		canvas = $('.video-js-box');
 		videos = $('.hMedia');
 
 		if (videos.length > 1) {
