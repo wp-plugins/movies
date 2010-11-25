@@ -18,7 +18,7 @@
 
 		markup = ['<video class="video-js player" width="', W, '" height="', H, '" preload ', img ? 'poster="' + img + '"' : '', ' controls>',
 		  	'<source type=\'video/mp4; codecs="avc1.42E01E, mp4a.40.2"\' src="', video, '">',
-		  	'<source type=\'video/ogg; codecs="theora, vorbis"\' src="', video, '">',
+		  	'<source type=\'video/ogg; codecs="theora, vorbis"\' src="', video.replace(/mp4/, 'ogv'), '">',
 		  	'<object class="vjs-flash-fallback" width="', W, '" height="', H, '" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">',
 		  	'<param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" />',
 		    '<param name="allowfullscreen" value="true" />',
