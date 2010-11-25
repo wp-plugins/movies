@@ -28,3 +28,5 @@ Read More here: http://scottctaylor.wordpress.com/2010/11/24/new-plugin-movies/
 2. You can customize the look of your player and playlist by adding a video.css file in your theme's directory
 
 == Upgrade Notice ==
+
+* Update to get the latest bug fixes from ongoing development. 0.2 fixes bugs related to dynamic rendering of Video in Firfox.
