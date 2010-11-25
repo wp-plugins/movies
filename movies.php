@@ -134,9 +134,9 @@ else:
 		'numberposts' 	 => -1	
 	));
 endif;
-if (is_array($videos)): 	
-	if (count($videos) === 1): 	
-?>
+if (is_array($videos)): ?>
+<div class="videos-wrapper">	
+<?php if (count($videos) === 1): ?>
 <div class="video-js-box" id="video-js-box">
 	<div class="vjs-no-video"></div>
 	<?php
@@ -163,15 +163,9 @@ if (is_array($videos)):
 	endforeach; ?>
 </div>	
 	<?php endif;
-	unset($videos);
-endif;
-?>
-<?php
-}
-
-function the_movies() {
-	//alias for
-	the_videos();
+	unset($videos); ?>
+</div>	
+<?php endif;
 }
 
 function movies_handler($atts, $content = null ) {
@@ -208,4 +202,8 @@ function movies_print_scripts() {
 }
 add_action('wp_print_scripts', 'movies_print_scripts');
 
+function movies_init() {
+
+}
+add_action('init', 'movies_init');
 ?>
