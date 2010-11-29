@@ -13,7 +13,15 @@ Movies allows you to use simple functions in your theme to display videos you ha
 
 You can use this shortcode <code>[movies]</code> or <code>the_movies()</code> or <code>the_videos()</code> in your theme to output your item's attachments.
 
+You may need to add these Mime-Type declarations to <code>httpd.conf</code> or your <code>.htaccess</code> file
+<code>
+AddType video/ogg .ogv 
+AddType video/mp4 .mp4 
+AddType video/webm .webm
+</code>
+
 Read More here: http://scottctaylor.wordpress.com/2010/11/24/new-plugin-movies/
+Follow-up: http://scottctaylor.wordpress.com/2010/11/28/movies-plugin-now-supports-webm/
 
 = 0.3 =
 * Support for WebM added when used with [Shuffle](http://wordpress.org/extend/plugins/shuffle/ "Shuffle"), fixes Media Uploader to support WebM 
