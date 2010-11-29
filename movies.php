@@ -3,7 +3,7 @@
 Plugin Name: Movies
 Description: HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hAudio Micro-formats, attach images to Videos (when used with Shuffle)
 Author: Scott Taylor
-Version: 0.1
+Version: 0.3
 Author URI: http://tsunamiorigami.com
 */
 
@@ -30,6 +30,23 @@ function video_get_ogg_object($id) {
 	return $ogg;
 }
 
+function video_get_webm_object($id) {
+	$webm = '';
+	if (function_exists('shuffle_by_mime_type')):
+		$webms =& get_video($id);
+		if (is_array($webms) && count($webms) > 0) {
+			foreach ($webms as $w):
+				if ($w->post_mime_type === 'video/webm') {
+					$webm = $w;
+					break;				
+				}
+			endforeach;
+		}
+		unset($webms);
+	endif;
+	return $webm;
+}
+
 function video_get_ogg($id) {
 	$ogg = '';
 	
@@ -39,6 +56,17 @@ function video_get_ogg($id) {
 	}
 	
 	return $ogg;
+}
+
+function video_get_webm($id) {
+	$webm = '';
+	
+	$obj =& video_get_webm_object($id);
+	if (!empty($obj)) {
+		$webm = $obj->guid;
+	}
+	
+	return $webm;
 }
 
 function video_get_poster($id) {
@@ -70,6 +98,7 @@ function videojs_embed(&$post, &$info) {
 		$mp4 = $post->guid;
 		$image = video_get_poster($post->ID);
 		$ogg = video_get_ogg($post->ID);	
+		$webm = video_get_webm($post->ID);
 		$w = $info['width'];
 		$h = $info['height'];
 ?>
@@ -77,6 +106,7 @@ function videojs_embed(&$post, &$info) {
 	<video id="video-playlist" class="video-js player" width="<?= $w ?>" height="<?= $h ?>" preload="preload" controls="controls" <?php if (!empty($image)): ?>poster="<?= $image ?>"<?php endif ?>>
 	    <source type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' src="<?= $mp4 ?>"/>
 	    <?php if (!empty($ogg)): ?><source type='video/ogg; codecs="theora, vorbis"' src="<?= $ogg ?>"/><?php endif ?>
+		<?php if (!empty($webm)): ?><source type='video/webm; codecs="vp8, vorbis"' src="<?= $webm ?>"/><?php endif ?>
 		<?php video_flash_object($mp4, $w, $h, $image); ?>
 	</video>	    
 <?php
@@ -116,11 +146,13 @@ function video_formatted_item(&$post, &$info) {
 				<span class="fn org"><?= $artist ?></span>
 			</span>
 		</span>	   
-		<?php 
+	<?php 
 		video_enclosure($post, $info);
 		$ogg = video_get_ogg_object($post->ID);
 		if (!empty($ogg)): video_enclosure($ogg, $info); endif;
-		?> 	
+		$webm = video_get_webm_object($post->ID);
+		if (!empty($webm)): video_enclosure($webm, $info); endif;
+	?> 	
 		<p><?= $description ?></p>    	    
 	</div>
 <?php
@@ -224,6 +256,15 @@ function movies_print_scripts() {
 	wp_enqueue_script('movies');
 }
 add_action('wp_print_scripts', 'movies_print_scripts');
+
+function movies_upload_mimes($existing = array()) {
+	$mimes = array(
+		'ogv' => 'video/ogg',
+		'webm' => 'video/webm'
+	);
+	return array_merge($existing, $mimes);
+}
+add_filter('upload_mimes', 'movies_upload_mimes');
 
 function movies_init() {
 

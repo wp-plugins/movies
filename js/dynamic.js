@@ -11,19 +11,25 @@
             H = ctx.find('.height').eq(0).text() || 480,
             img = ctx.find('.photo').attr('src') || '',
             mp4 = ctx.find('a[type="video/mp4"]').attr('href'),
-            ogv = ctx.find('a[type="video/ogg"]').attr('href');
+            ogv = ctx.find('a[type="video/ogg"]').attr('href'),
+            webm = ctx.find('a[type="video/webm"]').attr('href');
 
-		if (mp4.indexOf('.mp4') === -1) {
+		if (mp4 && mp4.indexOf('.mp4') === -1) {
 			video = Base64.decode(mp4);
 		}
 
-		if (ogv.indexOf('.ogv') === -1) {
+		if (ogv && ogv.indexOf('.ogv') === -1) {
 			ogv = Base64.decode(ogv);
 		}
 
+		if (webm && webm.indexOf('.webm') === -1) {
+			webm = Base64.decode(webm);
+		}
+
 		markup = ['<video class="video-js player" width="', W, '" height="', H, '" preload ', img ? 'poster="' + img + '"' : '', ' controls>',
-		  	'<source type=\'video/mp4; codecs="avc1.42E01E, mp4a.40.2"\' src="', mp4, '">',
-		  	'<source type=\'video/ogg; codecs="theora, vorbis"\' src="', ogv, '">',
+		  	mp4 ? ['<source type=\'video/mp4; codecs="avc1.42E01E, mp4a.40.2"\' src="', mp4, '">'].join('') : '',
+		  	ogv ? ['<source type=\'video/ogg; codecs="theora, vorbis"\' src="', ogv, '">'].join('') : '',
+		  	webm ? ['<source type=\'video/webm; codecs="vp8, vorbis"\' src="', webm, '">'].join('') : '',
 		  	'<object class="vjs-flash-fallback" width="', W, '" height="', H, '" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">',
 		  	'<param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" />',
 		    '<param name="allowfullscreen" value="true" />',
