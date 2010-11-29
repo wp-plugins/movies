@@ -3,7 +3,7 @@
 Plugin Name: Movies
 Description: HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hAudio Micro-formats, attach images to Videos (when used with Shuffle)
 Author: Scott Taylor
-Version: 0.1
+Version: 0.3
 Author URI: http://tsunamiorigami.com
 */
 
@@ -11,16 +11,16 @@ if (!class_exists('getID3')) {
 	require_once('getid3/getid3/getid3.php');
 }
 
-define('SECURE', true);
+define('SECURE', false);
 
-function video_get_ogg($id) {
+function video_get_ogg_object($id) {
 	$ogg = '';
 	if (function_exists('shuffle_by_mime_type')):
 		$oggs =& get_video($id);
 		if (is_array($oggs) && count($oggs) > 0) {
 			foreach ($oggs as $o):
 				if ($o->post_mime_type === 'video/ogg') {
-					$ogg = $o->guid;
+					$ogg = $o;
 					break;				
 				}
 			endforeach;
@@ -28,6 +28,45 @@ function video_get_ogg($id) {
 		unset($oggs);
 	endif;
 	return $ogg;
+}
+
+function video_get_webm_object($id) {
+	$webm = '';
+	if (function_exists('shuffle_by_mime_type')):
+		$webms =& get_video($id);
+		if (is_array($webms) && count($webms) > 0) {
+			foreach ($webms as $w):
+				if ($w->post_mime_type === 'video/webm') {
+					$webm = $w;
+					break;				
+				}
+			endforeach;
+		}
+		unset($webms);
+	endif;
+	return $webm;
+}
+
+function video_get_ogg($id) {
+	$ogg = '';
+	
+	$obj =& video_get_ogg_object($id);
+	if (!empty($obj)) {
+		$ogg = $obj->guid;
+	}
+	
+	return $ogg;
+}
+
+function video_get_webm($id) {
+	$webm = '';
+	
+	$obj =& video_get_webm_object($id);
+	if (!empty($obj)) {
+		$webm = $obj->guid;
+	}
+	
+	return $webm;
 }
 
 function video_get_poster($id) {
@@ -59,6 +98,7 @@ function videojs_embed(&$post, &$info) {
 		$mp4 = $post->guid;
 		$image = video_get_poster($post->ID);
 		$ogg = video_get_ogg($post->ID);	
+		$webm = video_get_webm($post->ID);
 		$w = $info['width'];
 		$h = $info['height'];
 ?>
@@ -66,6 +106,7 @@ function videojs_embed(&$post, &$info) {
 	<video id="video-playlist" class="video-js player" width="<?= $w ?>" height="<?= $h ?>" preload="preload" controls="controls" <?php if (!empty($image)): ?>poster="<?= $image ?>"<?php endif ?>>
 	    <source type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' src="<?= $mp4 ?>"/>
 	    <?php if (!empty($ogg)): ?><source type='video/ogg; codecs="theora, vorbis"' src="<?= $ogg ?>"/><?php endif ?>
+		<?php if (!empty($webm)): ?><source type='video/webm; codecs="vp8, vorbis"' src="<?= $webm ?>"/><?php endif ?>
 		<?php video_flash_object($mp4, $w, $h, $image); ?>
 	</video>	    
 <?php
@@ -80,14 +121,22 @@ function video_get_src($url) {
 	return $url;
 }
 
+function video_enclosure(&$post, &$info) {
+	$mime = $post->post_mime_type;
+	$source = $post->guid;
+	$title = apply_filters('the_title', $post->post_title);
+	$attr = apply_filters('the_title_attribute', $post->post_title);	
+?>
+		<a rel="enclosure" type="<?= $mime ?>" title="Permalink for <?= $attr ?>" href="<?= video_get_src($source) ?>"><?= $title ?> (<span class="width"><?= $info['width'] ?></span> x <span class="height"><?= $info['height'] ?></span>)</a>
+<?php
+}
+
 function video_formatted_item(&$post, &$info) {
 	$title = apply_filters('the_title', $post->post_title);
 	$attr = apply_filters('the_title_attribute', $post->post_title);
 	$artist =  $post->post_excerpt;
-	$description = $post->post_content;
-	$source = $post->guid;
-	$mime = $post->post_mime_type;
 	$img = video_get_poster($post->ID);
+	$description = $post->post_content;
 ?>
 	<div class="hMedia">
 		<?php if (!empty($img)): ?><img class="photo" src="<?= $img ?>" alt="<?= $attr ?>"/>
@@ -96,8 +145,14 @@ function video_formatted_item(&$post, &$info) {
 			<span class="vcard">
 				<span class="fn org"><?= $artist ?></span>
 			</span>
-		</span>	    
-		<a rel="enclosure" type="<?= $mime ?>" title="Permalink for <?= $attr ?>" href="<?= video_get_src($source) ?>"><?= $title ?> (<span class="width"><?= $info['width'] ?></span> x <span class="height"><?= $info['height'] ?></span>)</a>	
+		</span>	   
+	<?php 
+		video_enclosure($post, $info);
+		$ogg = video_get_ogg_object($post->ID);
+		if (!empty($ogg)): video_enclosure($ogg, $info); endif;
+		$webm = video_get_webm_object($post->ID);
+		if (!empty($webm)): video_enclosure($webm, $info); endif;
+	?> 	
 		<p><?= $description ?></p>    	    
 	</div>
 <?php
@@ -201,6 +256,15 @@ function movies_print_scripts() {
 	wp_enqueue_script('movies');
 }
 add_action('wp_print_scripts', 'movies_print_scripts');
+
+function movies_upload_mimes($existing = array()) {
+	$mimes = array(
+		'ogv' => 'video/ogg',
+		'webm' => 'video/webm'
+	);
+	return array_merge($existing, $mimes);
+}
+add_filter('upload_mimes', 'movies_upload_mimes');
 
 function movies_init() {
 
