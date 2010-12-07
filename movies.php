@@ -3,7 +3,7 @@
 Plugin Name: Movies
 Description: HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hAudio Micro-formats, attach images to Videos (when used with Shuffle)
 Author: Scott Taylor
-Version: 0.3
+Version: 0.4
 Author URI: http://tsunamiorigami.com
 */
 
@@ -11,6 +11,16 @@ if (!class_exists('getID3')) {
 	require_once('getid3/getid3/getid3.php');
 }
 
+/**
+ *
+ * defaults to MediaElement
+ * set VIDEO_JS to 'false' to use VideoJS
+ *
+ */
+
+define('WARNING', true);
+define('VIDEO_JS', true);
+define('MEDIA_ELEMENT',true);
 define('SECURE', false);
 
 function video_get_ogg_object($id) {
@@ -81,36 +91,52 @@ function video_get_poster($id) {
 	return $image;
 }
 
-function video_flash_object($source = '', $w = 0, $h = 0, $image = '') { ?>
+function video_flash_object($source = '', $w = 0, $h = 0, $image = '') { 
+	$w = $w < 400 ? 400 : $w; 
 
+if (MEDIA_ELEMENT): ?>
+	<object width="<?= $w ?>" height="<?= $h ?>" type="application/x-shockwave-flash" data="<?= WP_PLUGIN_URL ?>/movies/js/flashmediaelement.swf"> 		
+		<param name="movie" value="<?= WP_PLUGIN_URL ?>/movies/js/flashmediaelement.swf" /> 
+		<param name="flashvars" value="controls=true&amp;poster=<?= $image ?>&amp;file=<?= $source ?>" /> 		
+	</object> 
+<?php else: ?>
 	<object class="vjs-flash-fallback" width="<?= $w ?>" height="<?= $h ?>" type="application/x-shockwave-flash"
 	        data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
 	    <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" />
 	    <param name="allowfullscreen" value="true" />
 	    <param name="wmode" value="transparent" />
-	    <param name="flashvars" value='config={"playlist":["<?php if (!empty($image)) { echo $image; } ?>", {"autoPlay": false, "url": "<?= $source ?>"}]}' />
+	    <?php if (!empty($image)): ?><param name="flashvars" value='config={"playlist":["<?= $image ?>", {"autoPlay": false, "url": "<?= $source ?>"}]}' />
+	    <?php else: ?><param name="flashvars" value='config={"clip": {"autoPlay": false, "url": "<?= $source ?>"}}' />
+	    <?php endif ?>
 	</object>
-<?php    
+<?php   
+endif; 
 }
 
 function videojs_embed(&$post, &$info) {
-	if ($post->post_mime_type === 'video/mp4'):	
-		$mp4 = $post->guid;
-		$image = video_get_poster($post->ID);
-		$ogg = video_get_ogg($post->ID);	
-		$webm = video_get_webm($post->ID);
-		$w = $info['width'];
-		$h = $info['height'];
+if ($post->post_mime_type === 'video/mp4'):	
+	$mp4 = $post->guid;
+	$image = video_get_poster($post->ID);
+	$ogg = video_get_ogg($post->ID);	
+	$webm = video_get_webm($post->ID);
+	$w = $info['width'];
+	$h = $info['height'];
 ?>
-	
+<?php if (MEDIA_ELEMENT): ?>
+	<video width="<?= $w ?>" height="<?= $h ?>" poster="<?= $image ?>" controls="controls" preload="none">
+	    <source type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' src="<?= $mp4 ?>"/>
+	    <?php if (!empty($ogg)): ?><source type='video/ogg; codecs="theora, vorbis"' src="<?= $ogg ?>"/><?php endif ?>
+		<?php if (!empty($webm)): ?><source type='video/webm; codecs="vp8, vorbis"' src="<?= $webm ?>"/><?php endif ?>	
+	</video>
+<?php else: ?>	
 	<video id="video-playlist" class="video-js player" width="<?= $w ?>" height="<?= $h ?>" preload="preload" controls="controls" <?php if (!empty($image)): ?>poster="<?= $image ?>"<?php endif ?>>
 	    <source type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' src="<?= $mp4 ?>"/>
 	    <?php if (!empty($ogg)): ?><source type='video/ogg; codecs="theora, vorbis"' src="<?= $ogg ?>"/><?php endif ?>
 		<?php if (!empty($webm)): ?><source type='video/webm; codecs="vp8, vorbis"' src="<?= $webm ?>"/><?php endif ?>
 		<?php video_flash_object($mp4, $w, $h, $image); ?>
 	</video>	    
-<?php
-	endif;
+<?php endif;
+endif;
 }
 
 function video_get_src($url) {
@@ -173,6 +199,23 @@ function video_get_id3(&$post) {
 	return $info;
 }
 
+function the_flash_video() {
+	$video =& get_posts(array(
+		'post_parent'    => get_the_id(),
+		'post_mime_type' => 'video',
+		'order'       	 => 'ASC',
+		'orderby'     	 => 'menu_order',
+		'post_type'   	 => 'attachment',
+		'post_status' 	 => 'inherit',
+		'numberposts' 	 => 1	
+	));
+	$v = $video[0];
+	$info = video_get_id3($v);
+	$img = video_get_poster($v->ID);
+	
+	video_flash_object($v->guid, $info['width'], $info['height'], $img);	
+}
+
 function the_videos() {
 if (function_exists('shuffle_by_mime_type')):
 	$videos =& get_video(); 
@@ -190,7 +233,7 @@ else:
 	));
 endif;
 if (is_array($videos)): ?>
-<div class="videos-wrapper">	
+<div class="videos-wrapper" data-library="<?= MEDIA_ELEMENT ? 'me-js' : 'video-js'?>">	
 <?php if (count($videos) === 1): ?>
 <div class="video-js-box" id="video-js-box">
 	<div class="vjs-no-video"></div>
@@ -233,20 +276,29 @@ function movies_handler($atts, $content = null ) {
 add_shortcode('movies', 'movies_handler');
 
 function movies_print_styles() {
-	wp_register_style('video-js', WP_PLUGIN_URL . '/movies/css/videoJS-1.1.5-modified.css');
-	wp_register_style('movies', WP_PLUGIN_URL . '/movies/css/video.css', array('video-js'));	
-
-	wp_enqueue_style('movies');
+	if (MEDIA_ELEMENT) {
+		wp_register_style('media-element', WP_PLUGIN_URL . '/movies/css/mediaelementplayer.min.css');	
+		wp_enqueue_style('media-element');
+	} else {
+		wp_register_style('video-js', WP_PLUGIN_URL . '/movies/css/videoJS-2.0.1-modified.css');
+		wp_register_style('movies', WP_PLUGIN_URL . '/movies/css/video.css', array('video-js'));	
+		wp_enqueue_style('movies');
 	
-	if (is_file(STYLESHEETPATH . '/video.css')) {
-		wp_enqueue_style('movies-user', STYLESHEETDIR . '/video.css', array('movies'));		
+		if (is_file(STYLESHEETPATH . '/video.css')) {
+			wp_enqueue_style('movies-user', get_bloginfo('stylesheet_directory') . '/video.css', array('movies'));		
+		}	
 	}
 }
 add_action('wp_print_styles', 'movies_print_styles');
 
 function movies_print_scripts() {
-	wp_register_script('video-js', WP_PLUGIN_URL . '/movies/js/videoJS-1.1.5.js');	
-	wp_register_script('movies', WP_PLUGIN_URL . '/movies/js/dynamic.js', array('video-js', 'jquery'));
+	if (MEDIA_ELEMENT) {
+		wp_register_script('media-element', WP_PLUGIN_URL . '/movies/js/mediaelement-and-player.min.js', array('jquery'));	
+		wp_register_script('movies', WP_PLUGIN_URL . '/movies/js/dynamic.js', array('media-element', 'jquery'));
+	} else {
+		wp_register_script('video-js', WP_PLUGIN_URL . '/movies/js/videoJS-2.0.js');	
+		wp_register_script('movies', WP_PLUGIN_URL . '/movies/js/dynamic.js', array('video-js', 'jquery'));
+	}
 
 	if (SECURE) {
 		wp_register_script('base64', WP_PLUGIN_URL . '/movies/js/Base64.js');
@@ -266,8 +318,14 @@ function movies_upload_mimes($existing = array()) {
 }
 add_filter('upload_mimes', 'movies_upload_mimes');
 
-function movies_init() {
+function new_features() {
+	printf('<div id="movies-warning" class="updated fade">MediaElement is now the default player for Movies. To use VideoJS, set <code>define(\'MEDIA_ELEMENT\', false)</code> at the top of <code>plugins/movies/movies.php</code>. To remove this warning, set <code>define(\'WARNING\', false)</code> in the same location. <a href="http://scottctaylor.wordpress.com/2010/12/07/movies-v0-4-now-with-mediaelement-support/" target="_blank">Read More</a></div>');
+}
 
+function movies_init() {
+	if (defined('WARNING') && WARNING) {
+		add_action('admin_notices', 'new_features');
+	}
 }
 add_action('init', 'movies_init');
 ?>

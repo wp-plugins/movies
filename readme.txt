@@ -3,7 +3,7 @@ Contributors: wonderboymusic
 Tags: media, attachments, admin, video, videos, cms, jquery, manage, music, upload, VideoJS, HTML5
 Requires at least: 3.0
 Tested up to: 3.0
-Stable Tag: 0.3
+Stable Tag: 0.4
 
 HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia Micro-formats, attach images to videos (when used with Shuffle), associated Ogg Theora videos with MP4s/H.264 (When used with Shuffle) 
 
@@ -22,6 +22,12 @@ AddType video/webm .webm
 
 Read More here: http://scottctaylor.wordpress.com/2010/11/24/new-plugin-movies/
 Follow-up: http://scottctaylor.wordpress.com/2010/11/28/movies-plugin-now-supports-webm/
+Latest: http://scottctaylor.wordpress.com/2010/12/07/movies-v0-4-now-with-mediaelement-support/
+
+= 0.4 =
+* MediaElement is now the default player for Movies. To use VideoJS, set <code>define('MEDIA_ELEMENT', false)</code> at the top of <code>plugins/movies/movies.php</code>. To remove the warning about this, set <code>define('WARNING', false)</code> in the same location.
+* MediaElement CSS is not currently overridable as it has a unified UI across HTML5, Flash, and Silverlight
+* added a function called <code>the_flash_video()</code> to return the video as Flash, this is useful for completely bypassing HTML5 if you are having problems with it
 
 = 0.3 =
 * Support for WebM added when used with [Shuffle](http://wordpress.org/extend/plugins/shuffle/ "Shuffle"), fixes Media Uploader to support WebM 

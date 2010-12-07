@@ -3,7 +3,7 @@
 /*globals $, jQuery, window, document */
 
 (function ($) {
-	var videos;
+	var videos, library;
 
 	function writeVideo(ctx) {
 		var markup,
@@ -26,37 +26,50 @@
 			webm = Base64.decode(webm);
 		}
 
-		markup = ['<video class="video-js player" width="', W, '" height="', H, '" preload ', img ? 'poster="' + img + '"' : '', ' controls>',
-		  	mp4 ? ['<source type=\'video/mp4; codecs="avc1.42E01E, mp4a.40.2"\' src="', mp4, '">'].join('') : '',
-		  	ogv ? ['<source type=\'video/ogg; codecs="theora, vorbis"\' src="', ogv, '">'].join('') : '',
-		  	webm ? ['<source type=\'video/webm; codecs="vp8, vorbis"\' src="', webm, '">'].join('') : '',
-		  	'<object class="vjs-flash-fallback" width="', W, '" height="', H, '" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">',
-		  	'<param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" />',
-		    '<param name="allowfullscreen" value="true" />',
-            '<param name="wmode" value="transparent" />',    
-		    '<param name="flashvars" value=\'config={"playlist":["' + img + '", {"autoPlay": false, "url": "' + mp4 + '"}]}\' />',
-		'</object>',
-		'</video>'].join('');
+		if (library === 'me-js') {
+			markup = ['	<video width="', W, '" height="', H, '" src="', mp4, '" type="video/mp4" poster="', img, '" controls="controls" preload="none"></video>'].join('');
+		} else {
+			markup = ['<video class="video-js player" width="', W, '" height="', H, '" preload ', img ? 'poster="' + img + '"' : '', ' controls>',
+			  	mp4 ? ['<source type=\'video/mp4; codecs="avc1.42E01E, mp4a.40.2"\' src="', mp4, '">'].join('') : '',
+			  	ogv ? ['<source type=\'video/ogg; codecs="theora, vorbis"\' src="', ogv, '">'].join('') : '',
+			  	webm ? ['<source type=\'video/webm; codecs="vp8, vorbis"\' src="', webm, '">'].join('') : '',
+			  	'<object class="vjs-flash-fallback" width="', W, '" height="', H, '" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">',
+			  	'<param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" />',
+			    '<param name="allowfullscreen" value="true" />',
+	            '<param name="wmode" value="transparent" />',    
+			    '<param name="flashvars" value=\'config={"playlist":["' + img + '", {"autoPlay": false, "url": "' + mp4 + '"}]}\' />',
+			'</object>',
+			'</video>'].join('');		
+		}
 
 		ctx.closest('.videos-wrapper').find('.video-js-box').html(markup);
+	}
+
+	function setupVideo() {
+		if (library === 'me-js') {
+			$('video').mediaelementplayer();
+		} else {
+        	VideoJS.setupAllWhenReady();			
+		}	
 	}
 
 	function selectVideo() {
 		var elem = $(this);
 
 		writeVideo(elem);
-        VideoJS.setupAllWhenReady();        
+        setupVideo();       
 		return false;
 	}
 
 	$(document).ready(function () {
 		videos = $('.hMedia');
+		library = $('.videos-wrapper').attr('data-library');	
 
 		if (videos.length > 1) {
 			videos.click(selectVideo);
             videos.eq(0).click();
 		} else {
-            VideoJS.setupAllWhenReady();
+			setupVideo();
 		}
 	});
 }(jQuery));
