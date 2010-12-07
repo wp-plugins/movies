@@ -9,7 +9,7 @@ HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia M
 
 == Description ==
 
-Movies allows you to use simple functions in your theme to display videos you have attached to Posts/Pages/Custom Post Types in your Media Library. Your player is styled 100% with CSS/images (if you want). The video player uses the VideoJS library and your browser's native HTML5 capabilities when available with a fallback to Flash when necessary. Allows you to play video inline on mobile browsers that support HTML5 Video. Video metadata is written to the page using the hMedia micro-format for semantic markup.
+Movies allows you to use simple functions in your theme to display videos you have attached to Posts/Pages/Custom Post Types in your Media Library. Your player is styled 100% with CSS/images (if you want). The video player uses the MediaElement (by default, or VideoJS - you pick!) library and your browser's native HTML5 capabilities when available with a fallback to Flash when necessary. Allows you to play video inline on mobile browsers that support HTML5 Video. Video metadata is written to the page using the hMedia micro-format for semantic markup.
 
 You can use this shortcode <code>[movies]</code> or <code>the_movies()</code> or <code>the_videos()</code> in your theme to output your item's attachments.
 
@@ -21,7 +21,9 @@ AddType video/webm .webm
 </code>
 
 Read More here: http://scottctaylor.wordpress.com/2010/11/24/new-plugin-movies/
+
 Follow-up: http://scottctaylor.wordpress.com/2010/11/28/movies-plugin-now-supports-webm/
+
 Latest: http://scottctaylor.wordpress.com/2010/12/07/movies-v0-4-now-with-mediaelement-support/
 
 = 0.4 =
