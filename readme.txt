@@ -3,7 +3,7 @@ Contributors: wonderboymusic
 Tags: media, attachments, admin, video, videos, cms, jquery, manage, music, upload, VideoJS, HTML5
 Requires at least: 3.0
 Tested up to: 3.0
-Stable Tag: 0.4
+Stable Tag: 0.5
 
 HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia Micro-formats, attach images to videos (when used with Shuffle), associated Ogg Theora videos with MP4s/H.264 (When used with Shuffle) 
 
@@ -25,6 +25,10 @@ Read More here: http://scottctaylor.wordpress.com/2010/11/24/new-plugin-movies/
 Follow-up: http://scottctaylor.wordpress.com/2010/11/28/movies-plugin-now-supports-webm/
 
 Latest: http://scottctaylor.wordpress.com/2010/12/07/movies-v0-4-now-with-mediaelement-support/
+
+== Changelog ==
+= 0.5 =
+* Doesn't load scripts and stylesheets in admin anymore, adds extra check in JS to remove any accidental error from script being loaded in the wrong context
 
 = 0.4 =
 * MediaElement is now the default player for Movies. To use VideoJS, set <code>define('MEDIA_ELEMENT', false)</code> at the top of <code>plugins/movies/movies.php</code>. To remove the warning about this, set <code>define('WARNING', false)</code> in the same location.

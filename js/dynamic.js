@@ -48,7 +48,7 @@
 	function setupVideo() {
 		if (library === 'me-js') {
 			$('video').mediaelementplayer();
-		} else {
+		} else if ('VideoJS' in window) {
         	VideoJS.setupAllWhenReady();			
 		}	
 	}

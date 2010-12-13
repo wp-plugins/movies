@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Movies
-Description: HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hAudio Micro-formats, attach images to Videos (when used with Shuffle)
+Description: HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia Micro-formats, attach images to Videos (when used with Shuffle)
 Author: Scott Taylor
-Version: 0.4
+Version: 0.5
 Author URI: http://tsunamiorigami.com
 */
 
@@ -276,36 +276,40 @@ function movies_handler($atts, $content = null ) {
 add_shortcode('movies', 'movies_handler');
 
 function movies_print_styles() {
-	if (MEDIA_ELEMENT) {
-		wp_register_style('media-element', WP_PLUGIN_URL . '/movies/css/mediaelementplayer.min.css');	
-		wp_enqueue_style('media-element');
-	} else {
-		wp_register_style('video-js', WP_PLUGIN_URL . '/movies/css/videoJS-2.0.1-modified.css');
-		wp_register_style('movies', WP_PLUGIN_URL . '/movies/css/video.css', array('video-js'));	
-		wp_enqueue_style('movies');
-	
-		if (is_file(STYLESHEETPATH . '/video.css')) {
-			wp_enqueue_style('movies-user', get_bloginfo('stylesheet_directory') . '/video.css', array('movies'));		
-		}	
-	}
+	if (!is_admin()) {
+		if (MEDIA_ELEMENT) {
+			wp_register_style('media-element', WP_PLUGIN_URL . '/movies/css/mediaelementplayer.min.css');	
+			wp_enqueue_style('media-element');
+		} else {
+			wp_register_style('video-js', WP_PLUGIN_URL . '/movies/css/videoJS-2.0.1-modified.css');
+			wp_register_style('movies', WP_PLUGIN_URL . '/movies/css/video.css', array('video-js'));	
+			wp_enqueue_style('movies');
+		
+			if (is_file(STYLESHEETPATH . '/video.css')) {
+				wp_enqueue_style('movies-user', get_bloginfo('stylesheet_directory') . '/video.css', array('movies'));		
+			}	
+		}
+	}	
 }
 add_action('wp_print_styles', 'movies_print_styles');
 
 function movies_print_scripts() {
-	if (MEDIA_ELEMENT) {
-		wp_register_script('media-element', WP_PLUGIN_URL . '/movies/js/mediaelement-and-player.min.js', array('jquery'));	
-		wp_register_script('movies', WP_PLUGIN_URL . '/movies/js/dynamic.js', array('media-element', 'jquery'));
-	} else {
-		wp_register_script('video-js', WP_PLUGIN_URL . '/movies/js/videoJS-2.0.js');	
-		wp_register_script('movies', WP_PLUGIN_URL . '/movies/js/dynamic.js', array('video-js', 'jquery'));
-	}
-
-	if (SECURE) {
-		wp_register_script('base64', WP_PLUGIN_URL . '/movies/js/Base64.js');
-		wp_enqueue_script('base64');
-	}
-
-	wp_enqueue_script('movies');
+	if (!is_admin()) {
+		if (MEDIA_ELEMENT) {
+			wp_register_script('media-element', WP_PLUGIN_URL . '/movies/js/mediaelement-and-player.min.js', array('jquery'));	
+			wp_register_script('movies', WP_PLUGIN_URL . '/movies/js/dynamic.js', array('media-element', 'jquery'));
+		} else {
+			wp_register_script('video-js', WP_PLUGIN_URL . '/movies/js/videoJS-2.0.js');	
+			wp_register_script('movies', WP_PLUGIN_URL . '/movies/js/dynamic.js', array('video-js', 'jquery'));
+		}
+	
+		if (SECURE) {
+			wp_register_script('base64', WP_PLUGIN_URL . '/movies/js/Base64.js');
+			wp_enqueue_script('base64');
+		}
+	
+		wp_enqueue_script('movies');
+	}	
 }
 add_action('wp_print_scripts', 'movies_print_scripts');
 
