@@ -1,22 +1,21 @@
 /*!
-* Media Element
-* HTML5 <video> and <audio> Shim
+* MediaElement.js
+* HTML5 <video> and <audio> shim and player
 * http://mediaelementjs.com/
 *
-* Creates a JavaScript object that mimics HTML5 media object
+* Creates a JavaScript object that mimics HTML5 MediaElement API
 * for browsers that don't understand HTML5 or can't play the provided codec
-* Can also play MP4 (H.264), Ogg, WebM, FLV, WMV, WMA, ACC, and MP3
+* Can play MP4 (H.264), Ogg, WebM, FLV, WMV, WMA, ACC, and MP3
 *
-* Copyright 2010, John Dyer
+* Copyright 2010, John Dyer (http://johndyer.me)
 * Dual licensed under the MIT or GPL Version 2 licenses.
 *
 */
-
 // Namespace
 var mejs = mejs || {};
 
 // version number
-mejs.version = '1.1.7';
+mejs.version = '2.0.2';
 
 // player number (for missing, same id attr)
 mejs.meIndex = 0;
@@ -31,6 +30,56 @@ mejs.plugins = {
 		//,{version: [11,0], types: ['video/webm'} // for future reference
 	]
 };
+
+/*
+Utility methods
+*/
+mejs.Utility = {	
+	encodeUrl: function(url) {
+		return encodeURIComponent(url); //.replace(/\?/gi,'%3F').replace(/=/gi,'%3D').replace(/&/gi,'%26');
+	},
+	escapeHTML: function(s) {
+		return s.split('&').join('&amp;').split('<').join('&lt;').split('"').join('&quot;');
+	},
+	absolutizeUrl: function(url) {
+		var el = document.createElement('div');
+		el.innerHTML = '<a href="' + this.escapeHTML(url) + '">x</a>';
+		return el.firstChild.href;
+	},
+	getScriptPath: function(scriptNames) {
+		var
+			i = 0,
+			j,
+			path = '',
+			name = '',
+			script,
+			scripts = document.getElementsByTagName('script');
+
+		for (; i < scripts.length; i++) {
+			script = scripts[i].src;
+			for (j = 0; j < scriptNames.length; j++) {
+				name = scriptNames[j];				
+				if (script.indexOf(name) > -1) {					
+					path = script.substring(0, script.indexOf(name));
+					break;
+				}
+			}
+			if (path !== '') {
+				break;
+			}
+		}
+		return path;
+	},	
+	secondsToTimeCode: function(seconds) {
+		seconds = Math.round(seconds);		
+		var minutes = Math.floor(seconds / 60);		
+		minutes = (minutes >= 10) ? minutes : "0" + minutes;
+		seconds = Math.floor(seconds % 60);
+		seconds = (seconds >= 10) ? seconds : "0" + seconds;
+		return minutes + ":" + seconds;
+	}
+};
+
 
 // Core detector, plugins are added below
 mejs.PluginDetector = {
@@ -155,6 +204,7 @@ mejs.MediaFeatures = {
 		this.isiPhone = (ua.match(/iPhone/i) !== null);
 		this.isAndroid = (ua.match(/Android/i) !== null);
 		this.isIE = (nav.appName.indexOf("Microsoft") != -1);
+		this.isChrome = (ua.match(/Chrome/gi) !== null);
 		
 		// create HTML5 media elements for IE before 9, get a <video> element for fullscreen detection
 		for (i=0; i<html5Elements.length; i++) {
@@ -163,58 +213,13 @@ mejs.MediaFeatures = {
 		
 		// detect native JavaScript fullscreen (Safari only, Chrome fails)
 		this.hasNativeFullScreen = (typeof v.webkitEnterFullScreen !== 'undefined');
-		if (ua.match(/Chrome/gi)) {
+		if (this.isChrome) {
 			this.hasNativeFullScreen = false;
 		}
 	}
 };
 mejs.MediaFeatures.init();
 
-/*
-Utility methods
-*/
-mejs.Utility = {	
-	escapeHTML: function(s) {
-		return s.split('&').join('&amp;').split('<').join('&lt;').split('"').join('&quot;');
-	},
-	absolutizeUrl: function(url) {
-		var el = document.createElement('div');
-		el.innerHTML = '<a href="' + this.escapeHTML(url) + '">x</a>';
-		return el.firstChild.href;
-	},
-	getScriptPath: function(scriptNames) {
-		var
-			i = 0,
-			j,
-			path = '',
-			name = '',
-			script,
-			scripts = document.getElementsByTagName('script');
-
-		for (; i < scripts.length; i++) {
-			script = scripts[i].src;
-			for (j = 0; j < scriptNames.length; j++) {
-				name = scriptNames[j];				
-				if (script.indexOf(name) > -1) {					
-					path = script.substring(0, script.indexOf(name));
-					break;
-				}
-			}
-			if (path !== '') {
-				break;
-			}
-		}
-		return path;
-	},	
-	secondsToTimeCode: function(seconds) {
-		seconds = Math.round(seconds);		
-		var minutes = Math.floor(seconds / 60);		
-		minutes = (minutes >= 10) ? minutes : "0" + minutes;
-		seconds = Math.floor(seconds % 60);
-		seconds = (seconds >= 10) ? seconds : "0" + seconds;
-		return minutes + ":" + seconds;
-	}
-};
 
 /*
 extension methods to <video> or <audio> object to bring it into parity with PluginMediaElement (see below)
@@ -228,7 +233,6 @@ mejs.HtmlMediaElement = {
 	
 	setMuted: function (muted) {
 		this.muted = muted;
-	
 	},
 	
 	setVolume: function (volume) {
@@ -261,9 +265,10 @@ mejs.HtmlMediaElement = {
 /*
 Mimics the <video/audio> element by calling Flash's External Interface or Silverlights [ScriptableMember]
 */
-mejs.PluginMediaElement = function (pluginid, pluginType) {
+mejs.PluginMediaElement = function (pluginid, pluginType, mediaUrl) {
 	this.id = pluginid;
 	this.pluginType = pluginType;
+	this.src = mediaUrl;
 	this.events = {};
 };
 
@@ -344,6 +349,7 @@ mejs.PluginMediaElement.prototype = {
 	setSrc: function (url) {
 		if (typeof url == 'string') {
 			this.pluginApi.setSrc(mejs.Utility.absolutizeUrl(url));
+			this.src = mejs.Utility.absolutizeUrl(url);
 		} else {
 			var i, media;
 			
@@ -351,6 +357,7 @@ mejs.PluginMediaElement.prototype = {
 				media = url[i];
 				if (this.canPlayType(media.type)) {
 					this.pluginApi.setSrc(mejs.Utility.absolutizeUrl(media.src));
+					this.src = mejs.Utility.absolutizeUrl(url);
 				}
 			}			
 		}	
@@ -411,6 +418,8 @@ mejs.PluginMediaElement.prototype = {
 	}
 	// end: fake events
 };
+
+
 
 // Handles calls from Flash/Silverlight and reports them as native <video/audio> events and properties
 mejs.MediaPluginBridge = {
@@ -501,6 +510,8 @@ mejs.MediaElementDefaults = {
 	pluginPath: mejs.Utility.getScriptPath(['mediaelement.js','mediaelement.min.js','mediaelement-and-player.js','mediaelement-and-player.min.js']),
 	// name of flash file
 	flashName: 'flashmediaelement.swf',
+	// turns on the smoothing filter in Flash
+	enablePluginSmoothing: false,
 	// name of silverlight file
 	silverlightName: 'silverlightmediaelement.xap',
 	// default if the <video width> is not specified
@@ -538,6 +549,7 @@ mejs.HtmlMediaElementShim = {
 			playback = {method:'', url:''},
 			poster = htmlMediaElement.getAttribute('poster'),
 			autoplay =  htmlMediaElement.getAttribute('autoplay'),
+			preload =  htmlMediaElement.getAttribute('preload'),
 			prop;
 
 		// extend options
@@ -546,17 +558,19 @@ mejs.HtmlMediaElementShim = {
 		}
 		
 		// check for real poster
-		poster = (poster == 'undefined' || poster === null) ? '' : poster;
+		poster = (typeof poster == 'undefined' || poster === null) ? '' : poster;
+		preload = (typeof preload == 'undefined' || preload === null || preload === 'false') ? 'none' : preload;
+		autoplay = !(typeof autoplay == 'undefined' || autoplay === null || autoplay === 'false');
 		
 		// test for HTML5 and plugin capabilities
 		playback = this.determinePlayback(htmlMediaElement, options, isVideo, supportsMediaTag);
 
 		if (playback.method == 'native') {
 			// add methods to native HTMLMediaElement
-			this.updateNative( htmlMediaElement, options);				
+			this.updateNative( htmlMediaElement, options, autoplay, preload, playback);				
 		} else if (playback.method !== '') {
 			// create plugin to mimic HTMLMediaElement
-			this.createPlugin( htmlMediaElement, options, isVideo, playback.method, (playback.url !== null) ? mejs.Utility.absolutizeUrl(playback.url).replace('&','%26') : '', poster, autoplay);
+			this.createPlugin( htmlMediaElement, options, isVideo, playback.method, (playback.url !== null) ? mejs.Utility.absolutizeUrl(playback.url).replace('&','%26') : '', poster, autoplay, preload);
 		} else {
 			// boo, no HTML5, no Flash, no Silverlight.
 			this.createErrorMessage( htmlMediaElement, options, (playback.url !== null) ? mejs.Utility.absolutizeUrl(playback.url) : '', poster );
@@ -690,12 +704,12 @@ mejs.HtmlMediaElementShim = {
 		options.error(htmlMediaElement);		
 	},
 	
-	createPlugin:function(htmlMediaElement, options, isVideo, pluginType, mediaUrl, poster, autoplay) {
+	createPlugin:function(htmlMediaElement, options, isVideo, pluginType, mediaUrl, poster, autoplay, preload) {
 	
 		var width = 1,
 			height = 1,
 			pluginid = 'me_' + pluginType + '_' + (mejs.meIndex++),
-			pluginMediaElement = new mejs.PluginMediaElement(pluginid, pluginType),
+			pluginMediaElement = new mejs.PluginMediaElement(pluginid, pluginType, mediaUrl),
 			container = document.createElement('div'),
 			node,
 			initVars;
@@ -732,17 +746,21 @@ mejs.HtmlMediaElementShim = {
 		initVars = [
 			'id=' + pluginid,
 			'poster=' + poster,
-			'isvideo=' + isVideo.toString(),
-			'autoplay=' + autoplay,
-			'width=' + width,
+			'isvideo=' + ((isVideo) ? "true" : "false"),
+			'autoplay=' + ((autoplay) ? "true" : "false"),
+			'preload=' + preload,
+			'width=' + width,			
 			'timerrate=' + options.timerRate,
 			'height=' + height];
 
-		if (mediaUrl !== null) {
-			initVars.push('file=' + mediaUrl);
+		if (mediaUrl !== null) {		
+			initVars.push('file=' + mejs.Utility.encodeUrl(mediaUrl));
 		}
 		if (options.enablePluginDebug) {
 			initVars.push('debug=true');
+		}
+		if (options.enablePluginSmoothing) {
+			initVars.push('smoothing=true');
 		}
 		
 		switch (pluginType) {
@@ -769,7 +787,7 @@ mejs.HtmlMediaElementShim = {
 '<param name="quality" value="high" />' +
 '<param name="bgcolor" value="#000000" />' +
 '<param name="wmode" value="transparent" />' +
-'<param name="allowScriptAccess" value="sameDomain" />' +
+'<param name="allowScriptAccess" value="always" />' +
 '<param name="allowFullScreen" value="true" />' +
 '</object>';
 
@@ -782,7 +800,7 @@ mejs.HtmlMediaElementShim = {
 'quality="high" ' +
 'bgcolor="#000000" ' +
 'wmode="transparent" ' +
-'allowScriptAccess="sameDomain" ' +
+'allowScriptAccess="always" ' +
 'allowFullScreen="true" ' +
 'type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" ' +
 'src="' + options.pluginPath + options.flashName + '?' + initVars.join('&') + '" ' +
@@ -797,12 +815,31 @@ mejs.HtmlMediaElementShim = {
 		// FYI: options.success will be fired by the MediaPluginBridge
 	},
 	
-	updateNative: function(htmlMediaElement, options) {
-
+	updateNative: function(htmlMediaElement, options, autoplay, preload, playback) {
+		
 		// add methods to video object to bring it into parity with Flash Object
 		for (var m in mejs.HtmlMediaElement) {
 			htmlMediaElement[m] = mejs.HtmlMediaElement[m];
 		}
+		
+		// special case to enforce preload attribute (Chrome doesn't respect this)
+		if (mejs.MediaFeatures.isChrome && preload == 'none' && autoplay !== '') {
+			// forces the browser to stop loading
+			
+			htmlMediaElement.src = '';
+			htmlMediaElement.load();			
+			htmlMediaElement.canceledPreload = true;
+			
+			htmlMediaElement.addEventListener('play',function() {
+				if (htmlMediaElement.canceledPreload) {
+					htmlMediaElement.src = playback.url;
+					htmlMediaElement.load();
+					htmlMediaElement.play();
+					htmlMediaElement.canceledPreload = false;
+				}
+			}, false);
+		}
+		
 		
 		// fire success code
 		options.success(htmlMediaElement, htmlMediaElement);		

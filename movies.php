@@ -3,7 +3,7 @@
 Plugin Name: Movies
 Description: HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia Micro-formats, attach images to Videos (when used with Shuffle)
 Author: Scott Taylor
-Version: 0.5
+Version: 0.6
 Author URI: http://tsunamiorigami.com
 */
 
@@ -26,7 +26,7 @@ define('SECURE', false);
 function video_get_ogg_object($id) {
 	$ogg = '';
 	if (function_exists('shuffle_by_mime_type')):
-		$oggs =& get_video($id);
+		$oggs = get_video($id);
 		if (is_array($oggs) && count($oggs) > 0) {
 			foreach ($oggs as $o):
 				if ($o->post_mime_type === 'video/ogg') {
@@ -43,7 +43,7 @@ function video_get_ogg_object($id) {
 function video_get_webm_object($id) {
 	$webm = '';
 	if (function_exists('shuffle_by_mime_type')):
-		$webms =& get_video($id);
+		$webms = get_video($id);
 		if (is_array($webms) && count($webms) > 0) {
 			foreach ($webms as $w):
 				if ($w->post_mime_type === 'video/webm') {
@@ -60,7 +60,7 @@ function video_get_webm_object($id) {
 function video_get_ogg($id) {
 	$ogg = '';
 	
-	$obj =& video_get_ogg_object($id);
+	$obj = video_get_ogg_object($id);
 	if (!empty($obj)) {
 		$ogg = $obj->guid;
 	}
@@ -71,7 +71,7 @@ function video_get_ogg($id) {
 function video_get_webm($id) {
 	$webm = '';
 	
-	$obj =& video_get_webm_object($id);
+	$obj = video_get_webm_object($id);
 	if (!empty($obj)) {
 		$webm = $obj->guid;
 	}
@@ -82,7 +82,7 @@ function video_get_webm($id) {
 function video_get_poster($id) {
 	$image = '';
 	if (function_exists('shuffle_by_mime_type')):
-		$images =& get_images($id);
+		$images = get_images($id);
 		if (is_array($images) && count($images) > 0) {
 			$image = $images[0]->guid;
 		}
@@ -123,7 +123,7 @@ if ($post->post_mime_type === 'video/mp4'):
 	$h = $info['height'];
 ?>
 <?php if (MEDIA_ELEMENT): ?>
-	<video width="<?= $w ?>" height="<?= $h ?>" poster="<?= $image ?>" controls="controls" preload="none">
+	<video width="<?= $w ?>" height="<?= $h ?>" poster="<?= $image ?>" controls="controls" src="<?= $mp4 ?>" preload="none">
 	    <source type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' src="<?= $mp4 ?>"/>
 	    <?php if (!empty($ogg)): ?><source type='video/ogg; codecs="theora, vorbis"' src="<?= $ogg ?>"/><?php endif ?>
 		<?php if (!empty($webm)): ?><source type='video/webm; codecs="vp8, vorbis"' src="<?= $webm ?>"/><?php endif ?>	
@@ -218,11 +218,11 @@ function the_flash_video() {
 
 function the_videos() {
 if (function_exists('shuffle_by_mime_type')):
-	$videos =& get_video(); 
+	$videos = get_video(); 
 else:
 	// this is functionality ported over from Shuffle
 	// you should be using Shuffle!!!	
-	$videos =& get_posts(array(
+	$videos = get_posts(array(
 		'post_parent'    => get_the_id(),
 		'post_mime_type' => 'video',
 		'order'       	 => 'ASC',

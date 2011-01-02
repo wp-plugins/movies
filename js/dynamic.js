@@ -15,7 +15,7 @@
             webm = ctx.find('a[type="video/webm"]').attr('href');
 
 		if (mp4 && mp4.indexOf('.mp4') === -1) {
-			video = Base64.decode(mp4);
+			mp4 = Base64.decode(mp4);
 		}
 
 		if (ogv && ogv.indexOf('.ogv') === -1) {
@@ -27,7 +27,7 @@
 		}
 
 		if (library === 'me-js') {
-			markup = ['	<video width="', W, '" height="', H, '" src="', mp4, '" type="video/mp4" poster="', img, '" controls="controls" preload="none"></video>'].join('');
+			markup = ['	<video width="', W, '" height="', H, '" src="', mp4, '" type="video/mp4"', img ? ' poster="' + img + '"' : '', ' controls="controls" preload="none"></video>'].join('');
 		} else {
 			markup = ['<video class="video-js player" width="', W, '" height="', H, '" preload ', img ? 'poster="' + img + '"' : '', ' controls>',
 			  	mp4 ? ['<source type=\'video/mp4; codecs="avc1.42E01E, mp4a.40.2"\' src="', mp4, '">'].join('') : '',
@@ -41,7 +41,6 @@
 			'</object>',
 			'</video>'].join('');		
 		}
-
 		ctx.closest('.videos-wrapper').find('.video-js-box').html(markup);
 	}
 

@@ -3,7 +3,7 @@ Contributors: wonderboymusic
 Tags: media, attachments, admin, video, videos, cms, jquery, manage, music, upload, VideoJS, HTML5
 Requires at least: 3.0
 Tested up to: 3.0
-Stable Tag: 0.5
+Stable Tag: 0.6
 
 HTML5 Video (on supported browsers), Flash fallback, CSS-skin'd player, hMedia Micro-formats, attach images to videos (when used with Shuffle), associated Ogg Theora videos with MP4s/H.264 (When used with Shuffle) 
 
@@ -27,6 +27,12 @@ Follow-up: http://scottctaylor.wordpress.com/2010/11/28/movies-plugin-now-suppor
 Latest: http://scottctaylor.wordpress.com/2010/12/07/movies-v0-4-now-with-mediaelement-support/
 
 == Changelog ==
+= 0.6 = 
+* Updates MediaElement to 2.0.2
+* Sets <code>src="<MP4 file>"</code> on video tag to fix bug in Firefox
+* Never sets empty <code>poster=""</code> so that there is no broken image icon on top of video
+* Fixes the getID3 library so that PHP4-like calls to class methods statically without the proper access modifier won't throw notices or errors in the server logs, even when <code>error_reporting(-1)</code>
+
 = 0.5 =
 * Doesn't load scripts and stylesheets in admin anymore, adds extra check in JS to remove any accidental error from script being loaded in the wrong context
 
