@@ -47,7 +47,7 @@ class getid3_id3v1
 			}
 			$ParsedID3v1['comment'] = $this->cutfield($ParsedID3v1['comment']);
 
-			$ParsedID3v1['genre'] = $this->LookupGenreName($ParsedID3v1['genreid']);
+			$ParsedID3v1['genre'] = self::LookupGenreName($ParsedID3v1['genreid']);
 			if (!empty($ParsedID3v1['genre'])) {
 				unset($ParsedID3v1['genreid']);
 			}
@@ -65,7 +65,7 @@ class getid3_id3v1
 											$ParsedID3v1['artist'],
 											$ParsedID3v1['album'],
 											$ParsedID3v1['year'],
-											(isset($ParsedID3v1['genre']) ? $this->LookupGenreID($ParsedID3v1['genre']) : false),
+											(isset($ParsedID3v1['genre']) ? self::LookupGenreID($ParsedID3v1['genre']) : false),
 											$ParsedID3v1['comment'],
 											@$ParsedID3v1['track']);
 			$ParsedID3v1['padding_valid'] = true;
@@ -105,7 +105,7 @@ class getid3_id3v1
 		return trim(substr($str, 0, strcspn($str, "\x00")));
 	}
 
-	function ArrayOfGenres($allowSCMPXextended=false) {
+	public static function ArrayOfGenres($allowSCMPXextended=false) {
 		static $GenreLookup = array(
 			0    => 'Blues',
 			1    => 'Classic Rock',
@@ -289,7 +289,7 @@ class getid3_id3v1
 		return ($allowSCMPXextended ? $GenreLookupSCMPX : $GenreLookup);
 	}
 
-	function LookupGenreName($genreid, $allowSCMPXextended=true) {
+	public static function LookupGenreName($genreid, $allowSCMPXextended=true) {
 		switch ($genreid) {
 			case 'RX':
 			case 'CR':
@@ -302,7 +302,7 @@ class getid3_id3v1
 		return (isset($GenreLookup[$genreid]) ? $GenreLookup[$genreid] : false);
 	}
 
-	function LookupGenreID($genre, $allowSCMPXextended=false) {
+	public static function LookupGenreID($genre, $allowSCMPXextended=false) {
 		$GenreLookup = getid3_id3v1::ArrayOfGenres($allowSCMPXextended);
 		$LowerCaseNoSpaceSearchTerm = strtolower(str_replace(' ', '', $genre));
 		foreach ($GenreLookup as $key => $value) {

@@ -1630,17 +1630,17 @@ class getid3_mp3
 	}
 
 
-	function MPEGaudioVersionArray() {
+	public static function MPEGaudioVersionArray() {
 		static $MPEGaudioVersion = array('2.5', false, '2', '1');
 		return $MPEGaudioVersion;
 	}
 
-	function MPEGaudioLayerArray() {
+	public static function MPEGaudioLayerArray() {
 		static $MPEGaudioLayer = array(false, 3, 2, 1);
 		return $MPEGaudioLayer;
 	}
 
-	function MPEGaudioBitrateArray() {
+	public static function MPEGaudioBitrateArray() {
 		static $MPEGaudioBitrate;
 		if (empty($MPEGaudioBitrate)) {
 			$MPEGaudioBitrate = array (
@@ -1659,7 +1659,7 @@ class getid3_mp3
 		return $MPEGaudioBitrate;
 	}
 
-	function MPEGaudioFrequencyArray() {
+	public static function MPEGaudioFrequencyArray() {
 		static $MPEGaudioFrequency;
 		if (empty($MPEGaudioFrequency)) {
 			$MPEGaudioFrequency = array (
@@ -1671,12 +1671,12 @@ class getid3_mp3
 		return $MPEGaudioFrequency;
 	}
 
-	function MPEGaudioChannelModeArray() {
+	public static function MPEGaudioChannelModeArray() {
 		static $MPEGaudioChannelMode = array('stereo', 'joint stereo', 'dual channel', 'mono');
 		return $MPEGaudioChannelMode;
 	}
 
-	function MPEGaudioModeExtensionArray() {
+	public static function MPEGaudioModeExtensionArray() {
 		static $MPEGaudioModeExtension;
 		if (empty($MPEGaudioModeExtension)) {
 			$MPEGaudioModeExtension = array (
@@ -1688,16 +1688,16 @@ class getid3_mp3
 		return $MPEGaudioModeExtension;
 	}
 
-	function MPEGaudioEmphasisArray() {
+	public static function MPEGaudioEmphasisArray() {
 		static $MPEGaudioEmphasis = array('none', '50/15ms', false, 'CCIT J.17');
 		return $MPEGaudioEmphasis;
 	}
 
-	function MPEGaudioHeaderBytesValid($head4, $allowBitrate15=false) {
+	public static function MPEGaudioHeaderBytesValid($head4, $allowBitrate15=false) {
 		return getid3_mp3::MPEGaudioHeaderValid(getid3_mp3::MPEGaudioHeaderDecode($head4), false, $allowBitrate15);
 	}
 
-	function MPEGaudioHeaderValid($rawarray, $echoerrors=false, $allowBitrate15=false) {
+	public static function MPEGaudioHeaderValid($rawarray, $echoerrors=false, $allowBitrate15=false) {
 		if (($rawarray['synch'] & 0x0FFE) != 0x0FFE) {
 			return false;
 		}
@@ -1769,7 +1769,7 @@ class getid3_mp3
 		return true;
 	}
 
-	function MPEGaudioHeaderDecode($Header4Bytes) {
+	public static function MPEGaudioHeaderDecode($Header4Bytes) {
 		// AAAA AAAA  AAAB BCCD  EEEE FFGH  IIJJ KLMM
 		// A - Frame sync (all bits set)
 		// B - MPEG Audio version ID
