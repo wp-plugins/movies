@@ -94,7 +94,7 @@ class getid3_quicktime
 
 				default:
 					$atomHierarchy = array();
-					$ThisFileInfo['quicktime'][$atomname] = $this->QuicktimeParseAtom($atomname, $atomsize, fread($fd, $atomsize), $ThisFileInfo, $offset, $atomHierarchy, $ParseAllPossibleAtoms);
+					$ThisFileInfo['quicktime'][$atomname] = self::QuicktimeParseAtom($atomname, $atomsize, fread($fd, $atomsize), $ThisFileInfo, $offset, $atomHierarchy, $ParseAllPossibleAtoms);
 					break;
 			}
 
@@ -146,7 +146,7 @@ class getid3_quicktime
 		return true;
 	}
 
-	function QuicktimeParseAtom($atomname, $atomsize, $atomdata, &$ThisFileInfo, $baseoffset, &$atomHierarchy, $ParseAllPossibleAtoms) {
+	public static function QuicktimeParseAtom($atomname, $atomsize, $atomdata, &$ThisFileInfo, $baseoffset, &$atomHierarchy, $ParseAllPossibleAtoms) {
 		// http://developer.apple.com/techpubs/quicktime/qtdevdocs/APIREF/INDEX/atomalphaindex.htm
 
 		array_push($atomHierarchy, $atomname);
@@ -170,11 +170,11 @@ class getid3_quicktime
 			case 'rmra': // Reference Movie Record Atom
 			case 'rmda': // Reference Movie Descriptor Atom
 			case 'gmhd': // Generic Media info HeaDer atom (seen on QTVR)
-				$atomstructure['subatoms'] = $this->QuicktimeParseContainerAtom($atomdata, $ThisFileInfo, $baseoffset + 8, $atomHierarchy, $ParseAllPossibleAtoms);
+				$atomstructure['subatoms'] = self::QuicktimeParseContainerAtom($atomdata, $ThisFileInfo, $baseoffset + 8, $atomHierarchy, $ParseAllPossibleAtoms);
 				break;
 
 			case 'stbl': // Sample TaBLe container atom
-				$atomstructure['subatoms'] = $this->QuicktimeParseContainerAtom($atomdata, $ThisFileInfo, $baseoffset + 8, $atomHierarchy, $ParseAllPossibleAtoms);
+				$atomstructure['subatoms'] = self::QuicktimeParseContainerAtom($atomdata, $ThisFileInfo, $baseoffset + 8, $atomHierarchy, $ParseAllPossibleAtoms);
 				$isVideo = false;
 				$framerate  = 0;
 				$framecount = 0;
@@ -253,11 +253,11 @@ class getid3_quicktime
 				$atomstructure['language_id'] = getid3_lib::BigEndian2Int(substr($atomdata,  2, 2));
 				$atomstructure['data']        =                           substr($atomdata,  4);
 
-				$atomstructure['language']    = $this->QuicktimeLanguageLookup($atomstructure['language_id']);
+				$atomstructure['language']    = self::QuicktimeLanguageLookup($atomstructure['language_id']);
 				if (empty($ThisFileInfo['comments']['language']) || (!in_array($atomstructure['language'], $ThisFileInfo['comments']['language']))) {
 					$ThisFileInfo['comments']['language'][] = $atomstructure['language'];
 				}
-				$this->CopyToAppropriateCommentsSection($atomname, $atomstructure['data'], $ThisFileInfo);
+				self::CopyToAppropriateCommentsSection($atomname, $atomstructure['data'], $ThisFileInfo);
 				break;
 
 
@@ -296,7 +296,7 @@ class getid3_quicktime
 
 				$CompressedFileData = substr($atomdata, 4);
 				if ($UncompressedHeader = @gzuncompress($CompressedFileData)) {
-					$atomstructure['subatoms'] = $this->QuicktimeParseContainerAtom($UncompressedHeader, $ThisFileInfo, 0, $atomHierarchy, $ParseAllPossibleAtoms);
+					$atomstructure['subatoms'] = self::QuicktimeParseContainerAtom($UncompressedHeader, $ThisFileInfo, 0, $atomHierarchy, $ParseAllPossibleAtoms);
 				} else {
 					$ThisFileInfo['warning'][] = 'Error decompressing compressed MOV atom at offset '.$atomstructure['offset'];
 				}
@@ -305,7 +305,7 @@ class getid3_quicktime
 
 			case 'dcom': // Data COMpression atom
 				$atomstructure['compression_id']   = $atomdata;
-				$atomstructure['compression_text'] = $this->QuicktimeDCOMLookup($atomdata);
+				$atomstructure['compression_text'] = self::QuicktimeDCOMLookup($atomdata);
 				break;
 
 
@@ -318,7 +318,7 @@ class getid3_quicktime
 				$atomstructure['reference_length']       = getid3_lib::BigEndian2Int(substr($atomdata,  8, 4));
 				switch ($atomstructure['reference_type_name']) {
 					case 'url ':
-						$atomstructure['url']            =       $this->NoNullString(substr($atomdata, 12));
+						$atomstructure['url']            =       self::NoNullString(substr($atomdata, 12));
 						break;
 
 					case 'alis':
@@ -384,7 +384,7 @@ class getid3_quicktime
 				$atomstructure['flags_raw']   = getid3_lib::BigEndian2Int(substr($atomdata,  1, 3)); // hardcoded: 0x0000
 				$atomstructure['language_id'] = getid3_lib::BigEndian2Int(substr($atomdata,  4, 2));
 
-				$atomstructure['language']    = $this->QuicktimeLanguageLookup($atomstructure['language_id']);
+				$atomstructure['language']    = self::QuicktimeLanguageLookup($atomstructure['language_id']);
 				if (empty($ThisFileInfo['comments']['language']) || (!in_array($atomstructure['language'], $ThisFileInfo['comments']['language']))) {
 					$ThisFileInfo['comments']['language'][] = $atomstructure['language'];
 				}
@@ -467,7 +467,7 @@ class getid3_quicktime
 
 								case 'mp4a':
 								default:
-									$ThisFileInfo['quicktime']['audio']['codec']       = $this->QuicktimeAudioCodecLookup($atomstructure['sample_description_table'][$i]['data_format']);
+									$ThisFileInfo['quicktime']['audio']['codec']       = self::QuicktimeAudioCodecLookup($atomstructure['sample_description_table'][$i]['data_format']);
 									$ThisFileInfo['quicktime']['audio']['sample_rate'] = $atomstructure['sample_description_table'][$i]['audio_sample_rate'];
 									$ThisFileInfo['quicktime']['audio']['channels']    = $atomstructure['sample_description_table'][$i]['audio_channels'];
 									$ThisFileInfo['quicktime']['audio']['bit_depth']   = $atomstructure['sample_description_table'][$i]['audio_bit_depth'];
@@ -510,11 +510,11 @@ class getid3_quicktime
 									$atomstructure['sample_description_table'][$i]['video_color_table_id']    =   getid3_lib::BigEndian2Int(substr($atomstructure['sample_description_table'][$i]['data'], 68,  2));
 
 									$atomstructure['sample_description_table'][$i]['video_pixel_color_type']  = (($atomstructure['sample_description_table'][$i]['video_pixel_color_depth'] > 32) ? 'grayscale' : 'color');
-									$atomstructure['sample_description_table'][$i]['video_pixel_color_name']  = $this->QuicktimeColorNameLookup($atomstructure['sample_description_table'][$i]['video_pixel_color_depth']);
+									$atomstructure['sample_description_table'][$i]['video_pixel_color_name']  = self::QuicktimeColorNameLookup($atomstructure['sample_description_table'][$i]['video_pixel_color_depth']);
 
 									if ($atomstructure['sample_description_table'][$i]['video_pixel_color_name'] != 'invalid') {
 										$ThisFileInfo['quicktime']['video']['codec_fourcc']        = $atomstructure['sample_description_table'][$i]['data_format'];
-										$ThisFileInfo['quicktime']['video']['codec_fourcc_lookup'] = $this->QuicktimeVideoCodecLookup($atomstructure['sample_description_table'][$i]['data_format']);
+										$ThisFileInfo['quicktime']['video']['codec_fourcc_lookup'] = self::QuicktimeVideoCodecLookup($atomstructure['sample_description_table'][$i]['data_format']);
 										$ThisFileInfo['quicktime']['video']['codec']               = $atomstructure['sample_description_table'][$i]['video_encoder_name'];
 										$ThisFileInfo['quicktime']['video']['color_depth']         = $atomstructure['sample_description_table'][$i]['video_pixel_color_depth'];
 										$ThisFileInfo['quicktime']['video']['color_depth_name']    = $atomstructure['sample_description_table'][$i]['video_pixel_color_name'];
@@ -753,7 +753,7 @@ class getid3_quicktime
 				$atomstructure['component_manufacturer'] =                           substr($atomdata, 12, 4);
 				$atomstructure['component_flags_raw']    = getid3_lib::BigEndian2Int(substr($atomdata, 16, 4));
 				$atomstructure['component_flags_mask']   = getid3_lib::BigEndian2Int(substr($atomdata, 20, 4));
-				$atomstructure['component_name']         =      $this->Pascal2String(substr($atomdata, 24));
+				$atomstructure['component_name']         =      self::Pascal2String(substr($atomdata, 24));
 
 				if (($atomstructure['component_subtype'] == 'STpn') && ($atomstructure['component_manufacturer'] == 'zzzz')) {
 					$ThisFileInfo['video']['dataformat'] = 'quicktimevr';
@@ -780,7 +780,7 @@ class getid3_quicktime
 				$atomstructure['creation_time_unix']    = getid3_lib::DateMac2Unix($atomstructure['creation_time']);
 				$atomstructure['modify_time_unix']      = getid3_lib::DateMac2Unix($atomstructure['modify_time']);
 				$atomstructure['playtime_seconds']      = $atomstructure['duration'] / $atomstructure['time_scale'];
-				$atomstructure['language']              = $this->QuicktimeLanguageLookup($atomstructure['language_id']);
+				$atomstructure['language']              = self::QuicktimeLanguageLookup($atomstructure['language_id']);
 				if (empty($ThisFileInfo['comments']['language']) || (!in_array($atomstructure['language'], $ThisFileInfo['comments']['language']))) {
 					$ThisFileInfo['comments']['language'][] = $atomstructure['language'];
 				}
@@ -961,7 +961,7 @@ class getid3_quicktime
 					$metaItemData = substr($metaItemRaw, 20);
 					$NextTagPosition += $metaItemSize + 4;
 
-					$this->CopyToAppropriateCommentsSection($metaItemKey, $metaItemData, $ThisFileInfo);
+					self::CopyToAppropriateCommentsSection($metaItemKey, $metaItemData, $ThisFileInfo);
 				}
 				break;
 
@@ -1041,7 +1041,7 @@ class getid3_quicktime
 		return $atomstructure;
 	}
 
-	function QuicktimeParseContainerAtom($atomdata, &$ThisFileInfo, $baseoffset, &$atomHierarchy, $ParseAllPossibleAtoms) {
+	public static function QuicktimeParseContainerAtom($atomdata, &$ThisFileInfo, $baseoffset, &$atomHierarchy, $ParseAllPossibleAtoms) {
 		$atomstructure  = false;
 		$subatomoffset  = 0;
 		$subatomcounter = 0;
@@ -1059,7 +1059,7 @@ class getid3_quicktime
 				return $atomstructure;
 			}
 
-			$atomstructure[$subatomcounter] = $this->QuicktimeParseAtom($subatomname, $subatomsize, $subatomdata, $ThisFileInfo, $baseoffset + $subatomoffset, $atomHierarchy, $ParseAllPossibleAtoms);
+			$atomstructure[$subatomcounter] = self::QuicktimeParseAtom($subatomname, $subatomsize, $subatomdata, $ThisFileInfo, $baseoffset + $subatomoffset, $atomHierarchy, $ParseAllPossibleAtoms);
 
 			$subatomoffset += $subatomsize;
 			$subatomcounter++;
@@ -1068,7 +1068,7 @@ class getid3_quicktime
 	}
 
 
-	function QuicktimeLanguageLookup($languageid) {
+	public static function QuicktimeLanguageLookup($languageid) {
 		static $QuicktimeLanguageLookup = array();
 		if (empty($QuicktimeLanguageLookup)) {
 			$QuicktimeLanguageLookup[0]   = 'English';
@@ -1185,7 +1185,7 @@ class getid3_quicktime
 		return (isset($QuicktimeLanguageLookup[$languageid]) ? $QuicktimeLanguageLookup[$languageid] : 'invalid');
 	}
 
-	function QuicktimeVideoCodecLookup($codecid) {
+	public static function QuicktimeVideoCodecLookup($codecid) {
 		static $QuicktimeVideoCodecLookup = array();
 		if (empty($QuicktimeVideoCodecLookup)) {
 			$QuicktimeVideoCodecLookup['3IVX'] = '3ivx MPEG-4';
@@ -1243,7 +1243,7 @@ class getid3_quicktime
 		return (isset($QuicktimeVideoCodecLookup[$codecid]) ? $QuicktimeVideoCodecLookup[$codecid] : '');
 	}
 
-	function QuicktimeAudioCodecLookup($codecid) {
+	public static function QuicktimeAudioCodecLookup($codecid) {
 		static $QuicktimeAudioCodecLookup = array();
 		if (empty($QuicktimeAudioCodecLookup)) {
 			$QuicktimeAudioCodecLookup['.mp3']          = 'Fraunhofer MPEG Layer-III alias';
@@ -1288,7 +1288,7 @@ class getid3_quicktime
 		return (isset($QuicktimeAudioCodecLookup[$codecid]) ? $QuicktimeAudioCodecLookup[$codecid] : '');
 	}
 
-	function QuicktimeDCOMLookup($compressionid) {
+	public static function QuicktimeDCOMLookup($compressionid) {
 		static $QuicktimeDCOMLookup = array();
 		if (empty($QuicktimeDCOMLookup)) {
 			$QuicktimeDCOMLookup['zlib'] = 'ZLib Deflate';
@@ -1297,7 +1297,7 @@ class getid3_quicktime
 		return (isset($QuicktimeDCOMLookup[$compressionid]) ? $QuicktimeDCOMLookup[$compressionid] : '');
 	}
 
-	function QuicktimeColorNameLookup($colordepthid) {
+	public static function QuicktimeColorNameLookup($colordepthid) {
 		static $QuicktimeColorNameLookup = array();
 		if (empty($QuicktimeColorNameLookup)) {
 			$QuicktimeColorNameLookup[1]  = '2-color (monochrome)';
@@ -1315,7 +1315,7 @@ class getid3_quicktime
 		return (isset($QuicktimeColorNameLookup[$colordepthid]) ? $QuicktimeColorNameLookup[$colordepthid] : 'invalid');
 	}
 
-	function CopyToAppropriateCommentsSection($keyname, $data, &$ThisFileInfo) {
+	public static function CopyToAppropriateCommentsSection($keyname, $data, &$ThisFileInfo) {
 		static $handyatomtranslatorarray = array();
 		if (empty($handyatomtranslatorarray)) {
 			$handyatomtranslatorarray['©cpy'] = 'copyright';
@@ -1364,7 +1364,7 @@ class getid3_quicktime
 		return true;
 	}
 
-	function NoNullString($nullterminatedstring) {
+	public static function NoNullString($nullterminatedstring) {
 		// remove the single null terminator on null terminated strings
 		if (substr($nullterminatedstring, strlen($nullterminatedstring) - 1, 1) === "\x00") {
 			return substr($nullterminatedstring, 0, strlen($nullterminatedstring) - 1);
@@ -1372,7 +1372,7 @@ class getid3_quicktime
 		return $nullterminatedstring;
 	}
 
-	function Pascal2String($pascalstring) {
+	public static function Pascal2String($pascalstring) {
 		// Pascal strings have 1 unsigned byte at the beginning saying how many chars (1-255) are in the string
 		return substr($pascalstring, 1);
 	}
