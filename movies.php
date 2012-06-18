@@ -87,12 +87,11 @@ class Movies {
     }
     
     function enclosure( $post, $info ) {
-        $mime = $post->post_mime_type;
-        $source = $post->guid;
+        $source = wp_get_attachment_url( $post->ID, 'full' );
         $title = apply_filters( 'the_title', $post->post_title );
         $attr = apply_filters( 'the_title_attribute', $post->post_title );	
     ?>
-        <a rel="enclosure" type="<?php esc_attr_e( $mime ) ?>" title="<?php esc_attr_e( $attr ) ?>" href="<?php echo esc_url( $source ) ?>"><?php echo $title ?> 
+        <a rel="enclosure" type="<?php esc_attr_e( $post->post_mime_type ) ?>" title="<?php esc_attr_e( $attr ) ?>" href="<?php echo esc_url( $source ) ?>"><?php echo $title ?> 
             (<span class="width"><?php echo $info['width'] ?></span> x <span class="height"><?php echo $info['height'] ?></span>)</a>
     <?php
     }
@@ -127,25 +126,25 @@ class Movies {
     <?php
     }
     
-    function embed( $post, $info ) {
+    function embed( $post ) {
     if ( 'video/mp4' === $post->post_mime_type ):	
-        $mp4 = $post->guid;
-        $image = video_get_poster( $post->ID );
-        $ogg = video_get_ogg( $post->ID );	
-        $webm = video_get_webm( $post->ID );
-        $w = $info['width'];
-        $h = $info['height'];
+        $mp4 = wp_get_attachment_url( $post->ID );
+        $image = $this->get_poster( $post->ID );
+        $ogg = $this->get_child_object( $post->ID, 'video/ogg' );	
+        $webm = $this->get_child_object( $post->ID, 'video/webm' );
     ?>
         <video width="<?php echo $w ?>" height="<?php echo $h ?>" poster="<?php echo $image ?>" controls="controls" src="<?php echo $mp4 ?>" preload="none">
             <source type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' src="<?php echo $mp4 ?>"/>
-            <?php if ( !empty( $ogg ) ): ?><source type='video/ogg; codecs="theora, vorbis"' src="<?php echo $ogg ?>"/><?php endif ?>
-            <?php if ( !empty( $webm ) ): ?><source type='video/webm; codecs="vp8, vorbis"' src="<?php echo $webm ?>"/><?php endif ?>	
+            <?php if ( !empty( $ogg ) ): 
+                ?><source type='video/ogg; codecs="theora, vorbis"' src="<?php echo $ogg ?>"/><?php endif ?>
+            <?php if ( !empty( $webm ) ): 
+                ?><source type='video/webm; codecs="vp8, vorbis"' src="<?php echo $webm ?>"/><?php endif ?>	
         </video>
     <?php
     endif;
     }
     
-    function video_formatted_item( &$post, &$info ) {
+    function formatted_item( &$post, &$info ) {
         $title = apply_filters( 'the_title', $post->post_title );
         $attr = apply_filters( 'the_title_attribute', $post->post_title );
         $artist =  $post->post_excerpt;
@@ -161,27 +160,23 @@ class Movies {
                 </span>
             </span>	   
         <?php 
-            video_enclosure( $post, $info );
+            $this->enclosure( $post, $info );
             $ogg = $this->get_child_object( $post->ID, 'video/ogg' );
             if ( !empty( $ogg ) )
-                video_enclosure( $ogg, $info );
+                $this->enclosure( $ogg, $info );
             $webm = $this->get_child_object( $post->ID, 'video/webm' );
             if ( !empty( $webm ) )
-                video_enclosure( $webm, $info );
+                $this->enclosure( $webm, $info );
         ?> 	
             <p><?php echo $description ?></p>    	    
         </div>
     <?php
     }
     
-    function the_videos() {
-    if ( function_exists( 'shuffle_by_mime_type' ) ):
-        $videos = get_video(); 
-    else:
-        // this is functionality ported over from Shuffle
-        // you should be using Shuffle!!!	
+    function the_videos( $id = 0 ) {
+
         $videos = get_posts( array(
-            'post_parent'    => get_the_id(),
+            'post_parent'    => empty( $id ) ? get_the_ID() : $id,
             'post_mime_type' => 'video',
             'order'       	 => 'ASC',
             'orderby'     	 => 'menu_order',
@@ -189,37 +184,30 @@ class Movies {
             'post_status' 	 => 'inherit',
             'numberposts' 	 => -1	
         ) );
-    endif;
-    if ( is_array( $videos ) ): ?>
-    <div class="videos-wrapper" data-library="<?php echo MEDIA_ELEMENT ? 'me-js' : 'video-js'?>">	
-    <?php if ( 1 === count( $videos ) ): ?>
-    <div class="video-js-box" id="video-js-box">
-        <div class="vjs-no-video"></div>
-        <?php
-        $info = video_get_id3( $videos[0] );
 
-        videojs_embed( $videos[0], $info );
-        ?></div>
-        <?php 
-        video_formatted_item( $videos[0], $info ); 
-        unset( $info );
+    if ( is_array( $videos ) ): ?>
+    <div class="videos-wrapper" data-library="me-js">	
+        <?php if ( 1 === count( $videos ) ): ?>
+        <div class="video-js-box" id="video-js-box">
+            <div class="vjs-no-video"></div>
+                <?php $this->videojs_embed( reset( $videos ) ) ?>
+            </div>
+            <?php 
+            $this->formatted_item( reset( $videos ) ); 
         else: 
         /**
         * Embed code will be loaded via JavaScript
         *
         */
         ?>
-    <div class="video-js-box" id="video-js-box"><div class="vjs-no-video"></div></div>
-    <div class="videos">
-    <?php 
-    foreach ( $videos as $video ): 
-        $info = video_get_id3( $video );	
-        video_formatted_item( $video, $info );
-        unset( $info ); 
-    endforeach ?>
-    </div>	
-    <?php endif;
-        unset( $videos ); ?>
+        <div class="video-js-box" id="video-js-box"><div class="vjs-no-video"></div></div>
+            <div class="videos">
+            <?php 
+            foreach ( $videos as $video )	
+                $this->formatted_item( $video ); 
+            ?>
+            </div>	
+        <?php endif ?>
     </div>	
     <?php endif;
     }
